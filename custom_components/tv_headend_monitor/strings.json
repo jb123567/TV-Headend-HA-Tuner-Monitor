@@ -1,0 +1,35 @@
+{
+  "config": {
+    "step": {
+      "user": {
+        "title": "TVHeadend Tuner Monitor",
+        "description": "Connect to your local TVHeadend instance to monitor DVB tuner status.",
+        "data": {
+          "host": "Host (IP or hostname)",
+          "port": "Port",
+          "username": "Username (optional)",
+          "password": "Password (optional)",
+          "scan_interval": "Scan interval (seconds)"
+        }
+      }
+    },
+    "error": {
+      "cannot_connect": "Cannot connect to TVHeadend. Check host, port and credentials.",
+      "invalid_auth": "Invalid username or password.",
+      "unknown": "Unexpected error."
+    },
+    "abort": {
+      "already_configured": "TVHeadend instance is already configured."
+    }
+  },
+  "options": {
+    "step": {
+      "init": {
+        "title": "TVHeadend Options",
+        "data": {
+          "scan_interval": "Scan interval (seconds)"
+        }
+      }
+    }
+  }
+}

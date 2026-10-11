@@ -18,6 +18,8 @@ DEFAULT_PASSWORD = ""
 # TVHeadend API endpoints
 TVH_API_SERVERINFO = "/api/serverinfo"
 TVH_API_STATUS_INPUTS = "/api/status/inputs"
+TVH_API_MPEGTS_INPUTS = "/api/mpegts/input/grid"  # every configured tuner, idle or not
 
 # Platforms
 PLATFORMS = ["binary_sensor", "sensor", "button"]
+

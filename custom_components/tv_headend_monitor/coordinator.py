@@ -30,9 +30,10 @@ class TVHeadendCoordinator(DataUpdateCoordinator):
     Availability detection
     ──────────────────────
     A tuner is "available" if its input name appears in the current
-    status/inputs response.  Once a name has been seen it is added to
-    _known_inputs; if it later disappears it flips to unavailable rather
-    than vanishing from HA entirely.
+    status/inputs response, or it is an enabled tuner in the configured
+    inputs list (which includes idle tuners that status/inputs omits).  Once
+    a name has been seen it is added to _known_inputs; if it later disappears
+    it flips to unavailable rather than vanishing from HA entirely.
     """
 
     def __init__(
@@ -73,11 +74,28 @@ class TVHeadendCoordinator(DataUpdateCoordinator):
                     current[key] = entry
                 self._known_inputs[key] = name
 
-            # Merge: present tuners + previously-seen-but-now-missing
+            # status/inputs only reports inputs TVHeadend is using right now, so
+            # also ask for the full list of configured tuners. Otherwise an idle
+            # tuner (usually the highest-numbered one) never gets entities.
+            # Optional: if this call fails we carry on with status/inputs alone.
+            configured: dict[str, bool] = {}  # key -> enabled
+            try:
+                for item in await self.client.get_input_grid():
+                    name = (item.get("text") or "").strip()
+                    if not name:
+                        continue
+                    key = _name_to_key(name)
+                    configured[key] = bool(item.get("enabled", True))
+                    self._known_inputs.setdefault(key, name)
+            except Exception as err:  # noqa: BLE001
+                _LOGGER.debug("Could not fetch configured tuner list: %s", err)
+
+            # Merge: present tuners + configured + previously-seen-but-now-missing
             tuners: dict[str, dict] = {}
             for key, name in self._known_inputs.items():
                 live = current.get(key)
-                tuners[key] = _build_tuner(key, name, live or {}, available=live is not None)
+                available = live is not None or configured.get(key, False)
+                tuners[key] = _build_tuner(key, name, live or {}, available=available)
 
             return {
                 "tuners": tuners,

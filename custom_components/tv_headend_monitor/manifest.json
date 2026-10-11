@@ -3,7 +3,7 @@
   "name": "TVHeadend Tuner Monitor",
   "version": "1.1.1-beta.1",
   "documentation": "https://github.com/jb123567/TV-Headend-HA-Tuner-Monitor",
-  "issue_tracker": "https://github.com/jb123567/tvheadend-tuner-monitor/issues",
+  "issue_tracker": "https://github.com/jb123567/TV-Headend-HA-Tuner-Monitor/issues",
   "dependencies": [],
   "codeowners": [],
   "requirements": [],

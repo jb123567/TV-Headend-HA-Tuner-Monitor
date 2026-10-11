@@ -10,7 +10,7 @@ from __future__ import annotations
 
 from homeassistant.components.binary_sensor import BinarySensorDeviceClass, BinarySensorEntity
 from homeassistant.config_entries import ConfigEntry
-from homeassistant.core import HomeAssistant
+from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers.entity import DeviceInfo
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.update_coordinator import CoordinatorEntity
@@ -23,11 +23,24 @@ async def async_setup_entry(
     hass: HomeAssistant, entry: ConfigEntry, async_add_entities: AddEntitiesCallback
 ) -> None:
     coordinator: TVHeadendCoordinator = hass.data[DOMAIN][entry.entry_id]
-    entities: list[BinarySensorEntity] = []
-    for key in coordinator.data["tuners"]:
-        entities.append(TVHeadendTunerAvailableSensor(coordinator, entry, key))
-        entities.append(TVHeadendTunerStreamingSensor(coordinator, entry, key))
-    async_add_entities(entities, update_before_add=True)
+    added: set[str] = set()
+
+    @callback
+    def _add_new_tuners() -> None:
+        """Create entities for any tuner not seen yet (also covers tuners that
+        only show up after startup)."""
+        entities: list[BinarySensorEntity] = []
+        for key in coordinator.data["tuners"]:
+            if key in added:
+                continue
+            added.add(key)
+            entities.append(TVHeadendTunerAvailableSensor(coordinator, entry, key))
+            entities.append(TVHeadendTunerStreamingSensor(coordinator, entry, key))
+        if entities:
+            async_add_entities(entities)
+
+    _add_new_tuners()
+    entry.async_on_unload(coordinator.async_add_listener(_add_new_tuners))
 
 
 def _device_info(entry: ConfigEntry, tuner: dict) -> DeviceInfo:

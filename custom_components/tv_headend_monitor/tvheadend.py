@@ -7,6 +7,7 @@ from typing import Any
 import aiohttp
 
 from .const import (
+    TVH_API_MPEGTS_INPUTS,
     TVH_API_STATUS_INPUTS,
     TVH_API_SERVERINFO,
 )
@@ -84,6 +85,17 @@ class TVHeadendClient:
         data = await self._get(TVH_API_STATUS_INPUTS)
         return data.get("entries", [])
 
+    async def get_input_grid(self) -> list[dict]:
+        """Fetch every configured tuner via /api/mpegts/input/grid.
+
+        Unlike /api/status/inputs (which only reports inputs TVHeadend is
+        currently using), this lists all tuners including idle ones. Each entry
+        has `text` (the same display name status/inputs reports as `input`)
+        and `enabled`.
+        """
+        data = await self._get(TVH_API_MPEGTS_INPUTS, params={"limit": 999})
+        return data.get("entries", [])
+
     async def test_connection(self) -> str:
         """Test connectivity and return the server version string."""
         info = await self.get_server_info()
@@ -93,3 +105,4 @@ class TVHeadendClient:
         """Close the session if we own it."""
         if self._owns_session and self._session and not self._session.closed:
             await self._session.close()
+

@@ -8,7 +8,7 @@ from homeassistant.components.sensor import (
     RestoreSensor, SensorEntity, SensorEntityDescription, SensorStateClass,
 )
 from homeassistant.config_entries import ConfigEntry
-from homeassistant.core import HomeAssistant
+from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers.entity import DeviceInfo, EntityCategory
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.update_coordinator import CoordinatorEntity
@@ -47,16 +47,29 @@ async def async_setup_entry(
     hass: HomeAssistant, entry: ConfigEntry, async_add_entities: AddEntitiesCallback
 ) -> None:
     coordinator: TVHeadendCoordinator = hass.data[DOMAIN][entry.entry_id]
-    entities: list[SensorEntity] = []
-    for key in coordinator.data["tuners"]:
-        for desc in TUNER_SENSORS:
-            entities.append(TVHeadendTunerSensor(coordinator, entry, key, desc))
-    entities += [
+    async_add_entities([
         TVHeadendTotalTunersSensor(coordinator, entry),
         TVHeadendAvailableTunersSensor(coordinator, entry),
         TVHeadendServerVersionSensor(coordinator, entry),
-    ]
-    async_add_entities(entities, update_before_add=True)
+    ])
+    added: set[str] = set()
+
+    @callback
+    def _add_new_tuners() -> None:
+        """Create sensors for any tuner not seen yet (also covers tuners that
+        only show up after startup)."""
+        entities: list[SensorEntity] = []
+        for key in coordinator.data["tuners"]:
+            if key in added:
+                continue
+            added.add(key)
+            for desc in TUNER_SENSORS:
+                entities.append(TVHeadendTunerSensor(coordinator, entry, key, desc))
+        if entities:
+            async_add_entities(entities)
+
+    _add_new_tuners()
+    entry.async_on_unload(coordinator.async_add_listener(_add_new_tuners))
 
 
 class TVHeadendTunerSensor(CoordinatorEntity, RestoreSensor):
@@ -193,4 +206,3 @@ class TVHeadendServerVersionSensor(_ServerDeviceMixin, CoordinatorEntity, Sensor
     @property
     def native_value(self) -> str:
         return self.coordinator.data.get("server_version", "unknown")
-

@@ -1,9 +1,9 @@
 {
   "domain": "tvheadend_tuner",
   "name": "TVHeadend Tuner Monitor",
-  "version": "Version_1.1.0",
-  "documentation": "https://github.com/your-repo/tvheadend-tuner-monitor",
-  "issue_tracker": "https://github.com/your-repo/tvheadend-tuner-monitor/issues",
+  "version": "1.1.1-beta.1",
+  "documentation": "https://github.com/jb123567/TV-Headend-HA-Tuner-Monitor",
+  "issue_tracker": "https://github.com/jb123567/TV-Headend-HA-Tuner-Monitor/issues",
   "dependencies": [],
   "codeowners": [],
   "requirements": [],

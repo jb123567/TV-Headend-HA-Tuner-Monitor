@@ -62,7 +62,7 @@ async def async_setup_entry(
         TVHeadendAvailableTunersSensor(coordinator, entry),
         TVHeadendServerVersionSensor(coordinator, entry),
     ]
-    async_add_entities(entities, update_before_add=True)
+    async_add_entities(entities)
 
 
 class TVHeadendTunerSensor(CoordinatorEntity, RestoreEntity, SensorEntity):
@@ -89,7 +89,6 @@ class TVHeadendTunerSensor(CoordinatorEntity, RestoreEntity, SensorEntity):
             name=tuner["name"],
             manufacturer="TVHeadend",
             model="DVB / SAT>IP Tuner",
-            via_device=(DOMAIN, entry.entry_id),
         )
 
     async def async_added_to_hass(self) -> None:

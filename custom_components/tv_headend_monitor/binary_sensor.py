@@ -27,7 +27,7 @@ async def async_setup_entry(
     for key in coordinator.data["tuners"]:
         entities.append(TVHeadendTunerAvailableSensor(coordinator, entry, key))
         entities.append(TVHeadendTunerStreamingSensor(coordinator, entry, key))
-    async_add_entities(entities, update_before_add=True)
+    async_add_entities(entities)
 
 
 def _device_info(entry: ConfigEntry, tuner: dict) -> DeviceInfo:
@@ -36,7 +36,6 @@ def _device_info(entry: ConfigEntry, tuner: dict) -> DeviceInfo:
         name=tuner["name"],
         manufacturer="TVHeadend",
         model="DVB / SAT>IP Tuner",
-        via_device=(DOMAIN, entry.entry_id),
     )
 
 

@@ -3,7 +3,7 @@
     "step": {
       "user": {
         "title": "TVHeadend Tuner Monitor",
-        "description": "Connect to your local TVHeadend instance to monitor DVB tuner status.",
+        "description": "Connect to your local TVHeadend instance to monitor DVB tuners and IPTV inputs.",
         "data": {
           "host": "Host (IP or hostname)",
           "port": "Port",

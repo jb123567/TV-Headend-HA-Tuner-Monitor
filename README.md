@@ -1,6 +1,6 @@
 # TVHeadend Tuner Monitor — Home Assistant Integration
 
-A custom Home Assistant integration that monitors your local TVHeadend instance, reports the connectivity state of every DVB tuner, exposes signal-quality metrics, and provides a one-click restart button.
+A custom Home Assistant integration that monitors your local TVHeadend instance, reports the connectivity state of every DVB tuner and IPTV input, exposes signal-quality metrics, and provides a one-click restart button.
 
 ---
 
@@ -18,6 +18,8 @@ A custom Home Assistant integration that monitors your local TVHeadend instance,
 | **Sensor – Connected Tuners** | How many are currently healthy |
 | **Sensor – Server Version** | TVHeadend software version string |
 | **Button – Restart TVHeadend** | Calls a `shell_command` to restart the service |
+
+IPTV inputs are added on the poll where they first appear. See [IPTV inputs](#iptv-inputs).
 
 ---
 
@@ -116,6 +118,24 @@ After editing `configuration.yaml`, go to **Developer Tools → YAML → Reload 
 
 ---
 
+## IPTV inputs
+
+DVB adapters are always included in TVHeadend's `/api/status/inputs` response, including while they are idle, so their entities are created when the integration loads.
+
+IPTV inputs are included only while a stream is active. TVHeadend names the slot (`IPTV #1`) and reports the stream (`1 - Sky Sports Main Event in IPTV #1`, `subs` 1). With nothing playing, that input is left out of the response. When it was the only input, the body is `{"entries":[],"totalCount":0}`.
+
+The integration follows the input name:
+
+- The first poll that contains a new name creates that input's device and entities. That poll is the normal scan interval.
+- Entity IDs and device IDs are derived from the input name. `IPTV #1` stays `IPTV #1` across sessions. The session `uuid` changes when a stream starts and is exposed only as an attribute. DVB entities use this same name rule, so existing DVB entity IDs stay the same.
+- After the input leaves the response, its entities stay registered. **Available** and **Streaming** turn off, **Active Subscriptions** returns to 0, and signal, SNR, and BER stay unknown because TVHeadend sends scale 0 for IPTV. History and dashboards keep the same entity IDs.
+- A restart restores every input that already has a device, in that idle state, even when nothing is playing. **TVHeadend Total Tuners** includes those idle inputs. **TVHeadend Available Tuners** counts inputs in the latest response.
+- A renamed input is tracked under the name TVHeadend reports. The device model is `IPTV Input` when that name contains "IPTV"; every other name keeps the existing `DVB / SAT>IP Tuner` model.
+
+Signal strength, SNR, BER, and uncorrected blocks are meaningful for a DVB tuner while it is tuned. For IPTV those fields stay at 0 / unknown; subscriptions and the streaming sensor carry the live state.
+
+---
+
 ## Example Automations
 
 ### Alert when a tuner disconnects
@@ -157,7 +177,8 @@ automation:
 |---|---|
 | "Cannot connect" during setup | Check host/port, firewall, and that TVHeadend is running |
 | All tuners show disconnected | Check TVHeadend → Configuration → DVB Inputs; adapters must be enabled |
-| Signal values are 0 | Tuner is idle (no active subscription); values are only live when tuning |
+| Signal values are 0 | Tuner is idle (no active subscription); values are only live when tuning. IPTV signal, SNR, and BER stay unknown; that is what TVHeadend reports. |
+| IPTV input has no entities | Start the stream and wait for the next poll. The input is added automatically and kept after the stream stops. |
 | Restart button shows notification instead of restarting | Follow the shell_command setup steps above |
 
 ---
@@ -172,6 +193,7 @@ custom_components/tvheadend_tuner/
 ├── const.py             # Constants
 ├── config_flow.py       # UI-driven config & options flow
 ├── coordinator.py       # DataUpdateCoordinator (polling)
+├── inputs.py            # Stable input names and dynamic discovery
 ├── tvheadend.py         # Async TVHeadend HTTP API client
 ├── binary_sensor.py     # Tuner connected/disconnected sensors
 ├── sensor.py            # Signal quality + aggregate sensors

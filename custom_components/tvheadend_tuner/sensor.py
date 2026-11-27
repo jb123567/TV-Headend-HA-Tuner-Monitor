@@ -8,7 +8,7 @@ from homeassistant.components.sensor import (
     SensorEntity, SensorEntityDescription, SensorStateClass,
 )
 from homeassistant.config_entries import ConfigEntry
-from homeassistant.core import HomeAssistant
+from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers.entity import DeviceInfo, EntityCategory
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.restore_state import RestoreEntity
@@ -16,6 +16,7 @@ from homeassistant.helpers.update_coordinator import CoordinatorEntity
 
 from .const import DOMAIN
 from .coordinator import TVHeadendCoordinator
+from .inputs import claim_new_tuner_keys, entity_unique_id, tuner_device_id, tuner_model
 
 
 # TVHeadend signal_status_scale_t (src/streaming.h):
@@ -53,16 +54,31 @@ async def async_setup_entry(
     hass: HomeAssistant, entry: ConfigEntry, async_add_entities: AddEntitiesCallback
 ) -> None:
     coordinator: TVHeadendCoordinator = hass.data[DOMAIN][entry.entry_id]
-    entities: list[SensorEntity] = []
-    for key in coordinator.data["tuners"]:
-        for desc in TUNER_SENSORS:
-            entities.append(TVHeadendTunerSensor(coordinator, entry, key, desc))
-    entities += [
-        TVHeadendTotalTunersSensor(coordinator, entry),
-        TVHeadendAvailableTunersSensor(coordinator, entry),
-        TVHeadendServerVersionSensor(coordinator, entry),
-    ]
-    async_add_entities(entities)
+    seen: set[str] = set()
+
+    @callback
+    def _async_add_new_tuners() -> None:
+        """Register sensors for inputs that appeared after setup (IPTV)."""
+        new_keys = claim_new_tuner_keys(seen, coordinator.data)
+        if not new_keys:
+            return
+        async_add_entities(
+            [
+                TVHeadendTunerSensor(coordinator, entry, key, desc)
+                for key in new_keys
+                for desc in TUNER_SENSORS
+            ]
+        )
+
+    entry.async_on_unload(coordinator.async_add_listener(_async_add_new_tuners))
+    _async_add_new_tuners()
+    async_add_entities(
+        [
+            TVHeadendTotalTunersSensor(coordinator, entry),
+            TVHeadendAvailableTunersSensor(coordinator, entry),
+            TVHeadendServerVersionSensor(coordinator, entry),
+        ]
+    )
 
 
 class TVHeadendTunerSensor(CoordinatorEntity, RestoreEntity, SensorEntity):
@@ -82,13 +98,13 @@ class TVHeadendTunerSensor(CoordinatorEntity, RestoreEntity, SensorEntity):
         self._key = key
         self._scaled_unit: str = DEFAULT_SCALED_UNIT
         tuner = coordinator.data["tuners"][key]
-        self._attr_unique_id = f"{entry.entry_id}_{key}_{description.key}"
+        self._attr_unique_id = entity_unique_id(entry.entry_id, key, description.key)
         self._attr_name = f"{tuner['name']} {description.name}"
         self._attr_device_info = DeviceInfo(
-            identifiers={(DOMAIN, f"{entry.entry_id}_{key}")},
+            identifiers={(DOMAIN, tuner_device_id(entry.entry_id, key))},
             name=tuner["name"],
             manufacturer="TVHeadend",
-            model="DVB / SAT>IP Tuner",
+            model=tuner_model(tuner["name"]),
         )
 
     async def async_added_to_hass(self) -> None:

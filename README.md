@@ -29,25 +29,44 @@ A custom Home Assistant integration that monitors your local TVHeadend instance,
 
 ---
 
+<!-- ha-marketplace:exclude-start -->
 ## Installation
 
-### Option 1 – HACS (recommended)
+[![Open your Home Assistant instance and open a repository in the Marketplace.](https://my.home-assistant.io/badges/marketplace_repository.svg)](https://my.home-assistant.io/redirect/marketplace_repository/?owner=jb123567&repository=TV-Headend-HA-Tuner-Monitor&category=integration)
 
-1. Open HACS → Integrations → ⋮ → Custom repositories.
-2. Add your repo URL, category **Integration**.
-3. Install **TVHeadend Tuner Monitor** and restart HA.
+[![Open your Home Assistant instance and open a repository inside the Home Assistant Community Store.](https://my.home-assistant.io/badges/hacs_repository.svg)](https://my.home-assistant.io/redirect/hacs_repository/?owner=jb123567&repository=TV-Headend-HA-Tuner-Monitor&category=integration)
+
+The Marketplace badge needs Home Assistant 2026.11 or newer. The HACS badge opens HACS on older versions, and the Marketplace on 2026.11 and newer.
+
+### Option 1 – HACS or the Marketplace (recommended)
+
+Once this repository is in the default catalog, search for **TVHeadend Tuner Monitor** and install it.
+
+Until then, add it as a custom repository:
+
+1. Open HACS → Integrations → ⋮ → Custom repositories. On Home Assistant 2026.11 and newer, use **Settings → Marketplace**.
+2. Add this repository URL, category **Integration**.
+3. Install **TVHeadend Tuner Monitor** and restart Home Assistant if it asks you to.
 
 ### Option 2 – Manual
 
-1. Copy the `custom_components/tvheadend_tuner/` folder into your HA config directory:
+1. Copy the `custom_components/tvheadend_tuner/` folder into your Home Assistant config directory:
    ```
    <config>/custom_components/tvheadend_tuner/
    ```
 2. Restart Home Assistant.
 
+The integration domain is `tvheadend_tuner`, and the folder in this repository now uses that same name. Home Assistant requires the folder name to match the domain. HACS and the Marketplace install into `custom_components/tvheadend_tuner/` because they install by domain, so an install that already came from HACS is already in the right folder. Config entries stay on the domain `tvheadend_tuner`.
+
+If you previously copied this repository in by hand as `custom_components/tv_headend_monitor/`, delete that old folder after updating and restart. Leaving both folders in place loads the integration twice under the same domain.
+
+<!-- ha-marketplace:exclude-end -->
+
 ---
 
 ## Configuration
+
+[![Open your Home Assistant instance and start setting up a new integration.](https://my.home-assistant.io/badges/config_flow_start.svg)](https://my.home-assistant.io/redirect/config_flow_start/?domain=tvheadend_tuner)
 
 1. Go to **Settings → Devices & Services → Add Integration**.
 2. Search for **TVHeadend Tuner Monitor**.

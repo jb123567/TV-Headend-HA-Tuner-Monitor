@@ -75,11 +75,12 @@ class TVHeadendClient:
         return await self._get(TVH_API_SERVERINFO)
 
     async def get_status_inputs(self) -> list[dict]:
-        """Fetch live input statistics for all tuners via /api/status/inputs.
+        """Fetch live input statistics via /api/status/inputs.
 
-        TVHeadend returns an entry for every adapter it knows about, even when
-        idle (signal/snr/bps will be zero).  A tuner that physically disappears
-        (USB unplug, SAT>IP box offline) will be absent from this response.
+        DVB adapters are included even when idle (signal/snr/bps are zero).
+        IPTV inputs are included only while a stream is active; an idle IPTV
+        input is absent. A tuner that physically disappears (USB unplug,
+        SAT>IP box offline) is absent as well.
         """
         data = await self._get(TVH_API_STATUS_INPUTS)
         return data.get("entries", [])

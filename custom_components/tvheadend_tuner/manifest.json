@@ -1,0 +1,12 @@
+{
+  "domain": "tvheadend_tuner",
+  "name": "TVHeadend Tuner Monitor",
+  "categories": ["media_entertainment.tv_streaming"],
+  "codeowners": ["@jb123567"],
+  "config_flow": true,
+  "documentation": "https://github.com/jb123567/TV-Headend-HA-Tuner-Monitor",
+  "iot_class": "local_polling",
+  "issue_tracker": "https://github.com/jb123567/TV-Headend-HA-Tuner-Monitor/issues",
+  "loggers": ["custom_components.tvheadend_tuner"],
+  "version": "1.1.2-beta.1"
+}
